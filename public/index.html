@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>"Congreso" Novovet - Colchagua</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e40af;
+      --bg: #f8fafc;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 24px; }
+    .container { max-width: 1550px; margin: 0 auto; }
+    
+    header { 
+      background: linear-gradient(135deg, #1e3a8a, #1e40af); 
+      color: white; 
+      padding: 16px 28px; 
+      border-radius: 16px; 
+      margin-bottom: 24px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      gap: 16px;
+    }
+    h1 { font-size: 20px; font-weight: 800; white-space: nowrap; }
+
+    /* Buscador en el Header */
+    .search-box {
+      flex: 1;
+      max-width: 380px;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      padding: 9px 14px 9px 36px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      font-size: 13px;
+      outline: none;
+      backdrop-filter: blur(4px);
+      transition: all 0.2s ease;
+    }
+    .search-input::placeholder { color: rgba(255, 255, 255, 0.7); }
+    .search-input:focus {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: white;
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      opacity: 0.8;
+      pointer-events: none;
+    }
+    
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    /* Switch Toggle */
+    .switch-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 6px 12px;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
+      white-space: nowrap;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(255, 255, 255, 0.3);
+      transition: .3s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #22c55e; }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    /* Layout principal de 2 columnas */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .card { background: white; border-radius: 16px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th { text-align: left; padding: 12px; background: #f1f5f9; font-size: 11px; text-transform: uppercase; color: var(--text-muted); }
+    td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+    
+    .badge-estado { padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; display: inline-block; }
+    .badge-pendiente { background: #fef3c7; color: #d97706; }
+    .badge-proceso { background: #e0f2fe; color: #0284c7; }
+    .badge-entregado { background: #dcfce7; color: #16a34a; }
+
+    .btn-ver { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; }
+    .btn-ver:hover { background: #dbeafe; }
+
+    /* Estilos Tarjetas Laterales */
+    .sidebar-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .widget-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .widget-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 8px;
+    }
+    .widget-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .widget-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+    .widget-item:last-child { border-bottom: none; }
+    .widget-label { font-weight: 600; color: var(--text); }
+    .widget-value { font-weight: 800; color: #1e3a8a; background: #eff6ff; padding: 3px 8px; border-radius: 6px; }
+
+    /* Modal Styles */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-card { background: white; border-radius: 16px; width: 700px; max-width: 92%; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+    .btn-close { background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); }
+
+    .gestion-box { background: #f8fafc; border: 1px solid var(--border); padding: 16px; border-radius: 12px; margin-top: 20px; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
+    .form-control { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; }
+    .btn-guardar { background: var(--primary); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 8px; }
+    .btn-guardar:hover { background: #1e3a8a; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>"Congreso" Novovet - Colchagua</h1>
+      
+      <!-- Buscador por Nombre o RUT -->
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          id="searchInput" 
+          class="search-input" 
+          placeholder="Buscar por RUT o Nombre..." 
+          oninput="renderTabla()"
+        >
+      </div>
+
+      <div class="header-actions">
+        <div class="switch-container">
+          <span>Ocultar Entregados</span>
+          <label class="switch">
+            <input type="checkbox" id="toggleEntregados" onchange="renderTabla()">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <span id="totalPedidos" style="white-space: nowrap;">Cargando...</span>
+      </div>
+    </header>
+
+    <div class="main-grid">
+      <!-- Tabla Principal -->
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>Código Pedido</th>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>RUT</th>
+              <th>Vendedor</th>
+              <th>Factura</th>
+              <th>Estado</th>
+              <th>Gestión / Detalle</th>
+            </tr>
+          </thead>
+          <tbody id="tablaPedidos"></tbody>
+        </table>
+      </div>
+
+      <!-- Tarjetas Laterales -->
+      <div class="sidebar-cards">
+        <!-- Tarjeta 1: Ventas por Día -->
+        <div class="widget-card">
+          <div class="widget-title">📊 Ventas por Día</div>
+          <ul class="widget-list" id="listaVentasDia">
+            <li class="widget-item"><span class="widget-label">Cargando...</span></li>
+          </ul>
+        </div>
+
+        <!-- Tarjeta 2: Ventas por Vendedor -->
+        <div class="widget-card">
+          <div class="widget-title">👤 Ventas por Vendedor</div>
+          <ul class="widget-list" id="listaVentasVendedor">
+            <li class="widget-item"><span class="widget-label">Cargando...</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Detalle y Gestión -->
+  <div id="modalDetalle" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalTitulo">Detalle de Pedido</h3>
+        <button class="btn-close" onclick="cerrarModal()">✕</button>
+      </div>
+
+      <table style="margin-bottom: 16px;">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Cant.</th>
+            <th>Precio</th>
+            <th>Promo</th>
+          </tr>
+        </thead>
+        <tbody id="tablaDetalle"></tbody>
+      </table>
+
+      <div class="gestion-box">
+        <h4 style="font-size: 14px; margin-bottom: 12px; color: var(--primary);">📋 Gestión Interna Empresa</h4>
+        <input type="hidden" id="editPedidoId">
+
+        <div style="display: flex; gap: 12px;">
+          <div class="form-group" style="flex: 1;">
+            <label>Estado del Pedido:</label>
+            <select id="editEstado" class="form-control" style="font-weight: 700;">
+              <option value="PENDIENTE">PENDIENTE</option>
+              <option value="EN PROCESO">EN PROCESO</option>
+              <option value="ENTREGADO">ENTREGADO</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="flex: 1;">
+            <label>N° Factura / Boleta:</label>
+            <input type="text" id="editFactura" class="form-control" placeholder="Ej: F-123456">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Comentarios Empresa (Notas Internas):</label>
+          <textarea id="editComentarios" class="form-control" rows="3" placeholder="Observaciones de despacho, pago o facturación..."></textarea>
+        </div>
+
+        <button class="btn-guardar" onclick="guardarGestion()">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let pedidosData = [];
+
+    async function cargarPedidos() {
+      try {
+        const res = await fetch('/api/pedidos');
+        pedidosData = await res.json();
+        renderTabla();
+      } catch (err) {
+        console.error("Error al cargar lista:", err);
+      }
+    }
+
+    function renderTabla() {
+      const tbody = document.getElementById('tablaPedidos');
+      tbody.innerHTML = '';
+
+      const ocultarEntregados = document.getElementById('toggleEntregados').checked;
+      const busqueda = document.getElementById('searchInput').value.toLowerCase().trim();
+
+      // Filtrar por switch de Entregados y por Buscador (RUT o Nombre)
+      const pedidosFiltrados = pedidosData.filter(p => {
+        // Filtro por Estado
+        if (ocultarEntregados && p.estado === 'ENTREGADO') {
+          return false;
+        }
+
+        // Filtro por Buscador (Nombre o RUT)
+        if (busqueda !== '') {
+          const nombreCliente = (p.nombre || '').toLowerCase();
+          const rutCliente = (p.rut || '').toLowerCase();
+          
+          if (!nombreCliente.includes(busqueda) && !rutCliente.includes(busqueda)) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+
+      document.getElementById('totalPedidos').innerText = `Total: ${pedidosFiltrados.length} Pedidos`;
+
+      if (pedidosFiltrados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">No se encontraron pedidos que coincidan.</td></tr>`;
+      } else {
+        // Renderizar filas de la tabla
+        pedidosFiltrados.forEach(p => {
+          let badgeClass = 'badge-pendiente';
+          if(p.estado === 'EN PROCESO') badgeClass = 'badge-proceso';
+          if(p.estado === 'ENTREGADO') badgeClass = 'badge-entregado';
+
+          let fechaFormateada = '-';
+          if (p.fecha) {
+            const partes = p.fecha.split('-');
+            if (partes.length === 3) {
+              const fechaDDMMAAAA = `${partes[2]}/${partes[1]}/${partes[0]}`;
+              const hora = p.hora ? ` ${p.hora.substring(0, 5)}` : '';
+              fechaFormateada = `${fechaDDMMAAAA}${hora}`;
+            } else {
+              fechaFormateada = p.fecha;
+            }
+          }
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${p.codigo_pedido || 'NV-' + p.id}</strong></td>
+            <td>${fechaFormateada}</td>
+            <td>${p.nombre || '-'}</td>
+            <td>${p.rut || '-'}</td>
+            <td>${p.vendedor || '-'}</td>
+            <td><strong>${p.factura || '-'}</strong></td>
+            <td><span class="badge-estado ${badgeClass}">${p.estado || 'PENDIENTE'}</span></td>
+            <td>
+              <button class="btn-ver" onclick="abrirGestion(${p.id})">Gestionar / Ver 📋</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Actualizar widgets según los datos filtrados
+      renderWidgets(pedidosFiltrados);
+    }
+
+    function renderWidgets(pedidos) {
+      const ventasPorDia = {};
+      const ventasPorVendedor = {};
+
+      pedidos.forEach(p => {
+        const monto = Number(p.total_pedido) || 0;
+
+        // Por Día
+        if (p.fecha) {
+          const partes = p.fecha.split('-');
+          if (partes.length === 3) {
+            const fechaKey = `${partes[2]}/${partes[1]}/${partes[0]}`;
+            ventasPorDia[fechaKey] = (ventasPorDia[fechaKey] || 0) + monto;
+          }
+        }
+
+        // Por Vendedor
+        const vendedorKey = p.vendedor || 'Sin asignación';
+        ventasPorVendedor[vendedorKey] = (ventasPorVendedor[vendedorKey] || 0) + monto;
+      });
+
+      // 1. Dibujar Ventas por Día
+      const ulDia = document.getElementById('listaVentasDia');
+      ulDia.innerHTML = '';
+      const fechas = Object.keys(ventasPorDia);
+
+      if (fechas.length === 0) {
+        ulDia.innerHTML = '<li class="widget-item"><span class="widget-label">Sin datos</span></li>';
+      } else {
+        fechas.forEach(fecha => {
+          const li = document.createElement('li');
+          li.className = 'widget-item';
+          li.innerHTML = `
+            <span class="widget-label">${fecha}</span>
+            <span class="widget-value">$${ventasPorDia[fecha].toLocaleString('es-CL')}</span>
+          `;
+          ulDia.appendChild(li);
+        });
+      }
+
+      // 2. Dibujar Ventas por Vendedor
+      const ulVendedor = document.getElementById('listaVentasVendedor');
+      ulVendedor.innerHTML = '';
+      const vendedores = Object.keys(ventasPorVendedor);
+
+      if (vendedores.length === 0) {
+        ulVendedor.innerHTML = '<li class="widget-item"><span class="widget-label">Sin datos</span></li>';
+      } else {
+        vendedores.forEach(vend => {
+          const li = document.createElement('li');
+          li.className = 'widget-item';
+          li.innerHTML = `
+            <span class="widget-label">${vend}</span>
+            <span class="widget-value">$${ventasPorVendedor[vend].toLocaleString('es-CL')}</span>
+          `;
+          ulVendedor.appendChild(li);
+        });
+      }
+    }
+
+    async function abrirGestion(id) {
+      const pedido = pedidosData.find(p => p.id === id);
+      if(!pedido) return;
+
+      document.getElementById('editPedidoId').value = pedido.id;
+      document.getElementById('editEstado').value = pedido.estado || 'PENDIENTE';
+      document.getElementById('editFactura').value = pedido.factura || '';
+      document.getElementById('editComentarios').value = pedido.comentarios_empresa || '';
+      
+      document.getElementById('modalTitulo').innerText = `Gestión Pedido: ${pedido.codigo_pedido || 'NV-' + pedido.id}`;
+
+      const tbody = document.getElementById('tablaDetalle');
+      tbody.innerHTML = '<tr><td colspan="4">Cargando ítems...</td></tr>';
+      document.getElementById('modalDetalle').style.display = 'flex';
+
+      if(pedido.codigo_pedido) {
+        try {
+          const res = await fetch(`/api/pedidos/detalle/${pedido.codigo_pedido}`);
+          const items = await res.json();
+          tbody.innerHTML = '';
+
+          items.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${item.producto}</td>
+              <td>${item.cantidad}</td>
+              <td>$${Number(item.precio).toLocaleString('es-CL')}</td>
+              <td>${item.promo || 'Sin promo'}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } catch (err) {
+          tbody.innerHTML = '<tr><td colspan="4">Error al cargar ítems.</td></tr>';
+        }
+      } else {
+        tbody.innerHTML = '<tr><td colspan="4">Sin código de pedido asociado.</td></tr>';
+      }
+    }
+
+    async function guardarGestion() {
+      const id = document.getElementById('editPedidoId').value;
+      const estado = document.getElementById('editEstado').value;
+      const factura = document.getElementById('editFactura').value;
+      const comentarios_empresa = document.getElementById('editComentarios').value;
+
+      try {
+        const res = await fetch(`/api/pedidos/${id}/gestion`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ estado, factura, comentarios_empresa })
+        });
+
+        if (res.ok) {
+          cerrarModal();
+          cargarPedidos();
+        } else {
+          alert('Ocurrió un error al guardar');
+        }
+      } catch (err) {
+        console.error("Error guardando gestión:", err);
+      }
+    }
+
+    function cerrarModal() {
+      document.getElementById('modalDetalle').style.display = 'none';
+    }
+
+    cargarPedidos();
+  </script>
+</body>
+</html>

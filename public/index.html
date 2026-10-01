@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>"Congreso" Novovet - Colchagua</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Librería SheetJS para descargar Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root {
       --primary: #1e40af;
@@ -132,6 +134,23 @@
 
     .btn-ver { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; }
     .btn-ver:hover { background: #dbeafe; }
+
+    /* Botón Excel ERP */
+    .btn-excel {
+      background-color: #16a34a;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color 0.2s ease;
+    }
+    .btn-excel:hover { background-color: #15803d; }
 
     /* Estilos Tarjetas Laterales */
     .sidebar-cards {
@@ -265,7 +284,13 @@
   <div id="modalDetalle" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 id="modalTitulo">Detalle de Pedido</h3>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <h3 id="modalTitulo">Detalle de Pedido</h3>
+          <!-- Botón Excel ERP -->
+          <button class="btn-excel" onclick="descargarExcelERP()">
+            📥 Descargar Excel ERP
+          </button>
+        </div>
         <button class="btn-close" onclick="cerrarModal()">✕</button>
       </div>
 
@@ -313,6 +338,8 @@
 
   <script>
     let pedidosData = [];
+    let currentModalItems = [];
+    let currentPedidoData = null;
 
     async function cargarPedidos() {
       try {
@@ -331,14 +358,11 @@
       const ocultarEntregados = document.getElementById('toggleEntregados').checked;
       const busqueda = document.getElementById('searchInput').value.toLowerCase().trim();
 
-      // Filtrar por switch de Entregados y por Buscador (RUT o Nombre)
       const pedidosFiltrados = pedidosData.filter(p => {
-        // Filtro por Estado
         if (ocultarEntregados && p.estado === 'ENTREGADO') {
           return false;
         }
 
-        // Filtro por Buscador (Nombre o RUT)
         if (busqueda !== '') {
           const nombreCliente = (p.nombre || '').toLowerCase();
           const rutCliente = (p.rut || '').toLowerCase();
@@ -356,7 +380,6 @@
       if (pedidosFiltrados.length === 0) {
         tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">No se encontraron pedidos que coincidan.</td></tr>`;
       } else {
-        // Renderizar filas de la tabla
         pedidosFiltrados.forEach(p => {
           let badgeClass = 'badge-pendiente';
           if(p.estado === 'EN PROCESO') badgeClass = 'badge-proceso';
@@ -391,7 +414,6 @@
         });
       }
 
-      // Actualizar widgets según los datos filtrados
       renderWidgets(pedidosFiltrados);
     }
 
@@ -402,7 +424,6 @@
       pedidos.forEach(p => {
         const monto = Number(p.total_pedido) || 0;
 
-        // Por Día
         if (p.fecha) {
           const partes = p.fecha.split('-');
           if (partes.length === 3) {
@@ -411,12 +432,10 @@
           }
         }
 
-        // Por Vendedor
         const vendedorKey = p.vendedor || 'Sin asignación';
         ventasPorVendedor[vendedorKey] = (ventasPorVendedor[vendedorKey] || 0) + monto;
       });
 
-      // 1. Dibujar Ventas por Día
       const ulDia = document.getElementById('listaVentasDia');
       ulDia.innerHTML = '';
       const fechas = Object.keys(ventasPorDia);
@@ -435,7 +454,6 @@
         });
       }
 
-      // 2. Dibujar Ventas por Vendedor
       const ulVendedor = document.getElementById('listaVentasVendedor');
       ulVendedor.innerHTML = '';
       const vendedores = Object.keys(ventasPorVendedor);
@@ -459,6 +477,9 @@
       const pedido = pedidosData.find(p => p.id === id);
       if(!pedido) return;
 
+      currentPedidoData = pedido;
+      currentModalItems = [];
+
       document.getElementById('editPedidoId').value = pedido.id;
       document.getElementById('editEstado').value = pedido.estado || 'PENDIENTE';
       document.getElementById('editFactura').value = pedido.factura || '';
@@ -474,6 +495,7 @@
         try {
           const res = await fetch(`/api/pedidos/detalle/${pedido.codigo_pedido}`);
           const items = await res.json();
+          currentModalItems = items;
           tbody.innerHTML = '';
 
           items.forEach(item => {
@@ -493,6 +515,40 @@
         tbody.innerHTML = '<tr><td colspan="4">Sin código de pedido asociado.</td></tr>';
       }
     }
+
+    // --- FUNCIÓN DESCARGA DE EXCEL ERP ---
+  function descargarExcelERP() {
+  if (!currentModalItems || currentModalItems.length === 0) {
+    alert("No hay productos cargados para exportar.");
+    return;
+  }
+
+  const filasERP = currentModalItems.map(item => {
+    // Tomamos el código real de la tabla colcha_articulos
+    let codigoProd = item.codigo_articulo || item.codigo || item.producto || '';
+    
+    // Evaluamos si el producto es regalo o bonificado (precio <= 1 o promo con palabra 'regalo')
+    const esGratis = (item.promo && item.promo.toLowerCase().includes('regalo')) || Number(item.precio) <= 1;
+
+    // Si es regalo/bonificado, anteponemos la 'x' al código del producto
+    if (esGratis && !codigoProd.startsWith('x')) {
+      codigoProd = 'x' + codigoProd;
+    }
+
+    return {
+      "Codigo": codigoProd,
+      "Cantidad": Number(item.cantidad) || 0,
+      "PrecioNeto": Number(item.precio) || 0
+    };
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(filasERP);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "CARGA_ERP");
+
+  const codigoPedido = currentPedidoData.codigo_pedido || ('NV-' + currentPedidoData.id);
+  XLSX.writeFile(workbook, `CARGA_ERP_${codigoPedido}.xls`);
+}
 
     async function guardarGestion() {
       const id = document.getElementById('editPedidoId').value;
